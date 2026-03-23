@@ -1,0 +1,24 @@
+{
+    "models": [
+        {
+            "id": "gemini-2.5-flash",
+            "label": "Gemini 2.5 Flash",
+            "badge": "API"
+        },
+        {
+            "id": "gemini-2.5-pro",
+            "label": "Gemini 2.5 Pro",
+            "badge": "API"
+        },
+        {
+            "id": "Qwen3-8B",
+            "label": "Qwen 3 8B",
+            "badge": "Local"
+        },
+        {
+            "id": "Qwen3-4B",
+            "label": "Qwen 3 4B",
+            "badge": "Local"
+        }
+    ]
+}

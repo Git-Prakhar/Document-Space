@@ -8,12 +8,12 @@ import Message from "../components/Message.jsx";
 // ── Icons ────────────────────────────────────────────────────────────────────
 
 // ── Data ─────────────────────────────────────────────────────────────────────
-const MODELS = [
-  { id: "claude-sonnet-4", label: "Claude Sonnet 4", badge: "Fast" },
-  { id: "claude-opus-4", label: "Claude Opus 4", badge: "Smart" },
-  { id: "gpt-4o", label: "GPT-4o", badge: "OpenAI" },
-  { id: "gemini-2.0", label: "Gemini 2.0 Flash", badge: "Google" },
-];
+// const MODELS = [
+//   { id: "claude-sonnet-4", label: "Claude Sonnet 4", badge: "Fast" },
+//   { id: "claude-opus-4", label: "Claude Opus 4", badge: "Smart" },
+//   { id: "gpt-4o", label: "GPT-4o", badge: "OpenAI" },
+//   { id: "gemini-2.0", label: "Gemini 2.0 Flash", badge: "Google" },
+// ];
 
 const RECENT_CHATS = [
   { id: "c1", title: "Research on climate change", time: "2h ago", sources: 3 },
@@ -65,6 +65,7 @@ export default function ChatPage() {
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const titleInputRef = useRef(null);
+  const [MODELS, setMODELS] = useState([]);
 
   const [sources, setSources] = useState([
     { id: "s1", type: "pdf", name: "climate_study_2024.pdf", status: "ready" },
@@ -83,6 +84,18 @@ export default function ChatPage() {
     },
   ]);
 
+  const fetchInitialData = async () => {
+    try {
+      const res = await fetch("http://127.0.0.1:8000/get-initial-data");
+      const data = await res.json();
+      console.log(data);
+      setMODELS(data.models);
+      setModel(data.models[0].id);
+    } catch (error) {
+      console.error("Error fetching initial data:", error);
+    }
+  }
+
   // Simulate the loading source becoming ready
   useEffect(() => {
     const t = setTimeout(() => {
@@ -98,6 +111,14 @@ export default function ChatPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    async function waitForBackend() {
+      await fetchInitialData();
+    }
+    waitForBackend();
+  }, [])
+  
 
   const addSource = ({ type, name }) => {
     const newSrc = { id: uid(), type, name, status: "loading" };
@@ -445,7 +466,12 @@ export default function ChatPage() {
 
           <div className="flex items-center gap-2">
             {/* Model selector */}
-            <ModelSelector model={model} onChange={setModel} MODELS={MODELS} />
+            {
+              MODELS.length > 0 && (
+                <ModelSelector model={model} onChange={setModel} MODELS={MODELS} />
+              )
+            }
+            {/* <ModelSelector model={model} onChange={setModel} MODELS={MODELS} /> */}
 
             {/* Textarea */}
             <div className="flex-1 relative">
