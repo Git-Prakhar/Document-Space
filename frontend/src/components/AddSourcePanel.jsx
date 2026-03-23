@@ -8,7 +8,7 @@ export default function AddSourcePanel({ onAdd, onClose, SOURCE_TYPES }) {
   const handleFileChange = (e, type) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    onAdd({ type, name: file.name });
+    onAdd({ type, name: file.name, file });
     e.target.value = "";
     onClose();
   };

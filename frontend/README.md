@@ -1,16 +1,24 @@
-# React + Vite
+# React - Vite + Tailwind CSS
+This is a React Project created with Vite and styled with Tailwind CSS.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Installation
+To install the dependencies, run the following command in the terminal:
+```bash
+npm install
+```
 
-Currently, two official plugins are available:
+## Running the Application
+To start the development server, run the following command:
+```bash
+npm run dev
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Supabase Integration
+This project is integrated with Supabase for backend services. To set up Supabase, follow these steps:
+1. Create a Supabase account and set up a new project.
+2. Obtain your Supabase URL and API key from the project settings.
+3. Follow `.env.example` to create a `.env` file in the "frontend" directory and add your Supabase credentials.
+4. Read the `README.md` file in the "supabase information" directory for more details about the tables and data used in this project.
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Additional Information
+You can raise an issue if you have any questions or need further assistance with the project. Feel free to contribute to the project by submitting pull requests.

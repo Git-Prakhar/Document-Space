@@ -27,6 +27,8 @@ dist-ssr
 .env
 # Backend
 /backend/testing/
+/backend/source_data/
 
 # Python
 __pycache__/
+.venv/

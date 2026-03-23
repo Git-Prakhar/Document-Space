@@ -4,7 +4,7 @@ import ModelSelector from "../components/ModelSelector.jsx";
 import Spinner from "../components/Spinner.jsx";
 import SourcesDropdown from "../components/SourcesDropdown.jsx";
 import Message from "../components/Message.jsx";
-import {supabase} from "../utils/Supabase.js";
+import { supabase } from "../utils/Supabase.js";
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 
@@ -80,16 +80,20 @@ export default function ChatPage() {
 
   const fetchInitialData = async () => {
     try {
-      const {data, error} = await supabase.from("model_list").select("*");
+      const { data, error } = await supabase.from("model_list").select("*");
       if (error) throw error;
       console.log(data);
-      const models = data.map(d => ({id: d.model_id, label: d.label, badge: d.badge}));
+      const models = data.map((d) => ({
+        id: d.model_id,
+        label: d.label,
+        badge: d.badge,
+      }));
       setMODELS(models);
       setModel(models[0].id);
     } catch (error) {
       console.error("Error fetching initial data:", error);
     }
-  }
+  };
 
   // Simulate the loading source becoming ready
   useEffect(() => {
@@ -112,25 +116,37 @@ export default function ChatPage() {
       await fetchInitialData();
     }
     waitForBackend();
-  }, [])
-  
+  }, []);
 
-  const addSource = ({ type, name }) => {
+  const addSource = async ({ type, name, file }) => {
     const newSrc = { id: uid(), type, name, status: "loading" };
     setSources((prev) => [...prev, newSrc]);
-    // Simulate processing
-    setTimeout(
-      () => {
-        setSources((prev) =>
-          prev.map((s) =>
-            s.id === newSrc.id
-              ? { ...s, status: Math.random() > 0.2 ? "ready" : "error" }
-              : s,
-          ),
-        );
-      },
-      2200 + Math.random() * 1500,
-    );
+
+    const formdata = new FormData();
+    formdata.append("file", file);
+    formdata.append("type", type);
+
+    try{
+      const res = await fetch("http://localhost:8000/save-source", {
+        method: "POST",
+        body: formdata,
+      });
+      if (res.status !== 200) throw new Error("Failed to upload source");
+
+      setSources((prev) =>
+        prev.map((s) =>
+          s.id === newSrc.id ? { ...s, status: "ready" } : s,
+        ),
+      );
+    }
+    catch(err){
+      console.error(err);
+      setSources((prev) =>
+        prev.map((s) =>
+          s.id === newSrc.id ? { ...s, status: "error" } : s,
+        ),
+      );
+    }
   };
 
   const removeSource = (id) =>
@@ -461,11 +477,13 @@ export default function ChatPage() {
 
           <div className="flex items-center gap-2">
             {/* Model selector */}
-            {
-              MODELS.length > 0 && (
-                <ModelSelector model={model} onChange={setModel} MODELS={MODELS} />
-              )
-            }
+            {MODELS.length > 0 && (
+              <ModelSelector
+                model={model}
+                onChange={setModel}
+                MODELS={MODELS}
+              />
+            )}
             {/* <ModelSelector model={model} onChange={setModel} MODELS={MODELS} /> */}
 
             {/* Textarea */}
