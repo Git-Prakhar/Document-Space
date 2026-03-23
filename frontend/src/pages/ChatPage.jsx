@@ -4,17 +4,11 @@ import ModelSelector from "../components/ModelSelector.jsx";
 import Spinner from "../components/Spinner.jsx";
 import SourcesDropdown from "../components/SourcesDropdown.jsx";
 import Message from "../components/Message.jsx";
+import {supabase} from "../utils/Supabase.js";
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 
 // ── Data ─────────────────────────────────────────────────────────────────────
-// const MODELS = [
-//   { id: "claude-sonnet-4", label: "Claude Sonnet 4", badge: "Fast" },
-//   { id: "claude-opus-4", label: "Claude Opus 4", badge: "Smart" },
-//   { id: "gpt-4o", label: "GPT-4o", badge: "OpenAI" },
-//   { id: "gemini-2.0", label: "Gemini 2.0 Flash", badge: "Google" },
-// ];
-
 const RECENT_CHATS = [
   { id: "c1", title: "Research on climate change", time: "2h ago", sources: 3 },
   {
@@ -86,11 +80,12 @@ export default function ChatPage() {
 
   const fetchInitialData = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/get-initial-data");
-      const data = await res.json();
+      const {data, error} = await supabase.from("model_list").select("*");
+      if (error) throw error;
       console.log(data);
-      setMODELS(data.models);
-      setModel(data.models[0].id);
+      const models = data.map(d => ({id: d.model_id, label: d.label, badge: d.badge}));
+      setMODELS(models);
+      setModel(models[0].id);
     } catch (error) {
       console.error("Error fetching initial data:", error);
     }
