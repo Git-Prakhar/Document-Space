@@ -6,22 +6,6 @@ import SourcesDropdown from "../components/SourcesDropdown.jsx";
 import Message from "../components/Message.jsx";
 import { supabase } from "../utils/Supabase.js";
 
-// ── Icons ────────────────────────────────────────────────────────────────────
-
-// ── Data ─────────────────────────────────────────────────────────────────────
-const RECENT_CHATS = [
-  { id: "c1", title: "Research on climate change", time: "2h ago", sources: 3 },
-  {
-    id: "c2",
-    title: "Quarterly report analysis",
-    time: "Yesterday",
-    sources: 1,
-  },
-  { id: "c3", title: "Legal contract review", time: "2d ago", sources: 5 },
-  { id: "c4", title: "Product design feedback", time: "3d ago", sources: 2 },
-  { id: "c5", title: "Market research deep dive", time: "1w ago", sources: 0 },
-];
-
 const DEMO_MESSAGES = [
   {
     id: "m1",
@@ -46,12 +30,8 @@ function uid() {
   return `s${++idCounter}`;
 }
 
-export default function ChatPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeChat, setActiveChat] = useState("c1");
-  const [chatTitle, setChatTitle] = useState("Research on climate change");
+export default function ChatPage({setSidebarOpen, chatTitle, setChatTitle, titleDraft, setTitleDraft}) {
   const [editingTitle, setEditingTitle] = useState(false);
-  const [titleDraft, setTitleDraft] = useState(chatTitle);
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [model, setModel] = useState("claude-sonnet-4");
   const [input, setInput] = useState("");
@@ -197,124 +177,6 @@ export default function ChatPage() {
         color: "#e4e4f0",
       }}
     >
-      {/* Google font import */}
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');`}</style>
-
-      {/* ── Sidebar ── */}
-      <aside
-        className="flex-shrink-0 flex flex-col border-r transition-all duration-300 overflow-hidden"
-        style={{
-          width: sidebarOpen ? 240 : 0,
-          borderColor: "rgba(255,255,255,0.06)",
-          background: "#111115",
-        }}
-      >
-        <div className="flex flex-col h-full" style={{ width: 240 }}>
-          {/* Logo / brand */}
-          <div
-            className="flex items-center gap-2.5 px-5 py-4 border-b"
-            style={{ borderColor: "rgba(255,255,255,0.06)" }}
-          >
-            <div
-              className="w-6 h-6 rounded-md flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg,#f59e0b,#ef4444)" }}
-            >
-              <svg viewBox="0 0 16 16" fill="white" className="w-3.5 h-3.5">
-                <path d="M8 1l1.9 3.8L14 5.8l-3 2.9.7 4.1L8 10.8l-3.7 1.95.7-4.1L2 5.8l4.1-.95L8 1z" />
-              </svg>
-            </div>
-            <span
-              className="text-sm font-semibold tracking-tight"
-              style={{ color: "#e4e4f0" }}
-            >
-              SourceChat
-            </span>
-          </div>
-
-          {/* New Chat button */}
-          <div className="px-3 pt-3 pb-2">
-            <button
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all hover:bg-white/5"
-              style={{
-                color: "#9090a8",
-                border: "1px dashed rgba(255,255,255,0.1)",
-              }}
-            >
-              <Icon.NewChat />
-              <span>New chat</span>
-            </button>
-          </div>
-
-          {/* Recent chats */}
-          <div className="flex-1 overflow-y-auto px-3 py-1 space-y-0.5">
-            <p
-              className="text-[10px] uppercase tracking-widest px-2 py-1.5"
-              style={{ color: "#555566" }}
-            >
-              Recent
-            </p>
-            {RECENT_CHATS.map((chat) => (
-              <button
-                key={chat.id}
-                onClick={() => {
-                  setActiveChat(chat.id);
-                  setChatTitle(chat.title);
-                  setTitleDraft(chat.title);
-                }}
-                className={`w-full text-left px-2.5 py-2.5 rounded-lg transition-all group ${activeChat === chat.id ? "bg-white/7" : "hover:bg-white/4"}`}
-              >
-                <p
-                  className={`text-xs font-medium truncate mb-0.5 ${activeChat === chat.id ? "text-neutral-100" : "text-neutral-400 group-hover:text-neutral-200"}`}
-                >
-                  {chat.title}
-                </p>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px]" style={{ color: "#555566" }}>
-                    {chat.time}
-                  </span>
-                  {chat.sources > 0 && (
-                    <span
-                      className="text-[10px] px-1.5 py-0.5 rounded"
-                      style={{
-                        background: "rgba(245,158,11,0.1)",
-                        color: "#9a7030",
-                      }}
-                    >
-                      {chat.sources} src
-                    </span>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* User area */}
-          <div
-            className="px-3 py-3 border-t"
-            style={{ borderColor: "rgba(255,255,255,0.06)" }}
-          >
-            <div className="flex items-center gap-2.5 px-2">
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
-                style={{
-                  background: "linear-gradient(135deg,#f59e0b44,#ef444433)",
-                  color: "#f59e0b",
-                }}
-              >
-                J
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-neutral-300 truncate">
-                  Jamie Chen
-                </p>
-                <p className="text-[10px]" style={{ color: "#555" }}>
-                  Free plan
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </aside>
 
       {/* ── Main panel ── */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -328,7 +190,7 @@ export default function ChatPage() {
         >
           {/* Sidebar toggle */}
           <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={() => setSidebarOpen()}
             className="text-neutral-500 hover:text-neutral-300 transition-colors p-1"
           >
             <Icon.Menu />
@@ -452,29 +314,7 @@ export default function ChatPage() {
             background: "#111115",
           }}
         >
-          {/* Active sources mini-bar */}
-          {/* {sources.length > 0 && (
-            <div className="flex items-center gap-2 mb-2 overflow-x-auto pb-1 scrollbar-none">
-              {sources.map((s) => {
-                const T = SOURCE_TYPES.find((t) => t.id === s.type)?.icon ?? Icon.File;
-                return (
-                  <div key={s.id} className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] flex-shrink-0"
-                    style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: `1px solid ${s.status === "ready" ? "rgba(74,222,128,0.2)" : s.status === "error" ? "rgba(248,113,113,0.2)" : "rgba(251,191,36,0.2)"}`,
-                      color: "#777",
-                    }}>
-                    <T />
-                    <span className="max-w-[80px] truncate">{s.name.split(".")[0]}</span>
-                    {s.status === "ready"   && <span className="text-green-400 ml-0.5"><Icon.Check /></span>}
-                    {s.status === "error"   && <span className="text-red-400 ml-0.5"><Icon.AlertTriangle /></span>}
-                    {s.status === "loading" && <span className="ml-0.5"><Spinner /></span>}
-                  </div>
-                );
-              })}
-            </div> */}
-          {/* )} */}
-
+        
           <div className="flex items-center gap-2">
             {/* Model selector */}
             {MODELS.length > 0 && (
