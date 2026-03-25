@@ -14,7 +14,7 @@
 ## Add Columns:
 - chat_id: text
 - title: text (default value: "New Chat")
-- last_active: text for now
+- last_active: timestampz 
 - source_count: int4 (default value: 0)
 - sources: jsonb (default value: {"sources": []})
 - messages: jsonb (default value: {"messages": []})
