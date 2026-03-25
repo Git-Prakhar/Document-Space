@@ -18,8 +18,6 @@ export default function Sidebar({
     const { data, error } = await supabase
       .from('chat_table')
       .select('chat_id, title, last_active, source_count')
-      .order('last_active', { ascending: false })
-      .limit(10);
 
     if (error) {
       console.error("Error fetching recent chats:", error);
@@ -44,12 +42,48 @@ export default function Sidebar({
     }
   }
 
-  const changeChat = (chatId) => {
+  const changeChat = async (chatId) => {
+    const currentChatId = location.pathname.split("/chat/")[1];
+
+    const {data, getError} = await supabase
+      .from('chat_table')
+      .select('messages')
+      .eq('chat_id', currentChatId)
+      .single();
+
+    if(getError){
+      console.error("Error checking current chat messages:", getError);
+      return;
+    }
+
+    if(data.messages['messages'].length == 0){
+      await supabase.from('chat_table').delete().eq('chat_id', currentChatId);
+      setRecentChats(prev => prev.filter(chat => chat.id !== currentChatId));
+    }
+
     navigate(`/chat/${chatId}`);
     setActiveChat(chatId);
   }
 
   const createNewChat = async () => {
+    // Validation for existing "New Chat" with messages
+    const currentChatId = location.pathname.split("/chat/")[1];
+    const {data, getError} = await supabase
+      .from('chat_table')
+      .select('messages')
+      .eq('chat_id', currentChatId)
+      .single();
+
+    if(getError){
+      console.error("Error checking current chat messages:", getError);
+      return;
+    }
+
+    if(data.messages['messages'].length == 0){
+      alert("Please save or clear your current chat before starting a new one.");
+      return;
+    }
+
     const newChatId = `c${Date.now()}`;
 
     const newChat = {

@@ -22,3 +22,6 @@ This project is integrated with Supabase for backend services. To set up Supabas
 
 ## Additional Information
 You can raise an issue if you have any questions or need further assistance with the project. Feel free to contribute to the project by submitting pull requests.
+
+## To Do for next update:
+- [ ] Fix time issue for latest chat.
