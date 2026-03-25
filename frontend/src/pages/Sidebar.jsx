@@ -3,31 +3,58 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../utils/Supabase";
 import { useEffect, useState, useRef } from "react";
 
-export default function Sidebar({
-  sidebarOpen,
-  // activeChat,
-  // changeChat
-}) {
+export default function Sidebar({ sidebarOpen }) {
   const [RECENT_CHATS, setRecentChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
   const createChatBtn = useRef(null);
 
   const navigate = useNavigate();
 
+  const getTimeLabel = (lastActive) => {
+    if (!lastActive || isNaN(new Date(lastActive))) {
+      return "Unknown";
+    }
+
+    const currentTime = new Date();
+    const lastActiveTime = new Date(lastActive);
+    const timeDiff = Math.floor((currentTime - lastActiveTime) / 1000);
+    console.log("Time difference in seconds:", timeDiff);
+
+    if (timeDiff < 0) return "Just now";
+
+    if (timeDiff < 60) return "Just now";
+
+    if (timeDiff < 3600) {
+      const mins = Math.floor(timeDiff / 60);
+      return `${mins} min${mins > 1 ? "s" : ""} ago`;
+    }
+
+    if (timeDiff < 86400) {
+      const hrs = Math.floor(timeDiff / 3600);
+      return `${hrs} hr${hrs > 1 ? "s" : ""} ago`;
+    }
+
+    const days = Math.floor(timeDiff / 86400);
+    return `${days} day${days > 1 ? "s" : ""} ago`;
+  };
+
   const getRecentChats = async () => {
     const { data, error } = await supabase
       .from("chat_table")
-      .select("chat_id, title, last_active, source_count");
+      .select("chat_id, title, last_active, source_count")
+      .order("last_active", { ascending: false });
 
     if (error) {
       console.error("Error fetching recent chats:", error);
     } else {
-      const formattedChats = data.map((chat) => ({
-        id: chat.chat_id,
-        title: chat.title,
-        time: chat.last_active,
-        sources: chat.source_count,
-      }));
+      const formattedChats = data.map((chat) => {
+        return {
+          id: chat.chat_id,
+          title: chat.title,
+          time: getTimeLabel(chat.last_active),
+          sources: chat.source_count,
+        };
+      });
       setRecentChats(formattedChats);
     }
   };
@@ -96,7 +123,7 @@ export default function Sidebar({
       const newChat = {
         chat_id: newChatId,
         title: "New Chat",
-        last_active: "Just now",
+        last_active: new Date().toISOString(),
         source_count: 0,
         sources: { sources: [] },
         title_draft: "New Chat",
@@ -115,7 +142,7 @@ export default function Sidebar({
         {
           id: newChatId,
           title: "New Chat",
-          time: "Just now",
+          time: getTimeLabel(new Date().toISOString()),
           sources: 0,
         },
         ...prev,

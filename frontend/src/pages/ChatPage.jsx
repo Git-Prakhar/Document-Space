@@ -127,11 +127,12 @@ export default function ChatPage({setSidebarOpen}) {
   const removeSource = (id) =>
     setSources((prev) => prev.filter((s) => s.id !== id));
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     const text = input.trim();
     if (!text) return;
-    const userMsg = { id: uid(), role: "user", text };
-    const asstMsg = { id: uid(), role: "assistant", text: "", streaming: true };
+    const nextId = messages.length > 0 ? messages[messages.length - 1].id + 1 : 1;
+    const userMsg = { id: nextId, role: "user", text };
+    const asstMsg = { id: nextId + 1, role: "assistant", text: "", streaming: true };
     setMessages((prev) => [...prev, userMsg, asstMsg]);
     setInput("");
     if (textareaRef.current) {
@@ -141,6 +142,28 @@ export default function ChatPage({setSidebarOpen}) {
     // Simulate streaming
     const reply =
       "I've analyzed the sources you've provided. Based on the documents and recordings available, the mitigation strategies discussed include carbon capture technologies, renewable energy transitions, and policy-level interventions at the international level. The audio recording specifically mentions a 40% reduction target by 2035 as the most feasible pathway according to current modelling.";
+    
+    const messageSet = [
+      ...messages,
+      userMsg,
+      {
+        id: asstMsg.id,
+        role: "assistant",
+        text: reply,
+      }
+    ]
+
+    const {error} = await supabase.from("chat_table").update({
+      messages: { messages: messageSet},
+      last_active: new Date().toISOString()
+    }).eq("chat_id", chatId);
+
+    if(error){
+      console.error("Error saving message to database:", error);
+      return;
+    }
+
+
     let i = 0;
     const iv = setInterval(() => {
       i += Math.floor(Math.random() * 6) + 2;
