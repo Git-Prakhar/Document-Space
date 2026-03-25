@@ -1,116 +1,133 @@
 import Icon from "../utils/AllIcons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../utils/Supabase";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function Sidebar({
   sidebarOpen,
   // activeChat,
   // changeChat
 }) {
-
   const [RECENT_CHATS, setRecentChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
+  const createChatBtn = useRef(null);
 
   const navigate = useNavigate();
 
   const getRecentChats = async () => {
     const { data, error } = await supabase
-      .from('chat_table')
-      .select('chat_id, title, last_active, source_count')
+      .from("chat_table")
+      .select("chat_id, title, last_active, source_count");
 
     if (error) {
       console.error("Error fetching recent chats:", error);
     } else {
-      const formattedChats = data.map(chat => ({
+      const formattedChats = data.map((chat) => ({
         id: chat.chat_id,
         title: chat.title,
         time: chat.last_active,
-        sources: chat.source_count
+        sources: chat.source_count,
       }));
       setRecentChats(formattedChats);
     }
-  }
+  };
 
   const location = useLocation();
 
   const getActiveChat = () => {
     const chatId = location.pathname.split("/chat/")[1];
     console.log("Current chat ID from URL:", chatId);
-    if(chatId){
+    if (chatId) {
       setActiveChat(chatId);
     }
-  }
+  };
 
   const changeChat = async (chatId) => {
     const currentChatId = location.pathname.split("/chat/")[1];
 
-    const {data, getError} = await supabase
-      .from('chat_table')
-      .select('messages')
-      .eq('chat_id', currentChatId)
+    const { data, getError } = await supabase
+      .from("chat_table")
+      .select("messages")
+      .eq("chat_id", currentChatId)
       .single();
 
-    if(getError){
+    if (getError) {
       console.error("Error checking current chat messages:", getError);
       return;
     }
 
-    if(data.messages['messages'].length == 0){
-      await supabase.from('chat_table').delete().eq('chat_id', currentChatId);
-      setRecentChats(prev => prev.filter(chat => chat.id !== currentChatId));
+    if (data.messages["messages"].length == 0) {
+      await supabase.from("chat_table").delete().eq("chat_id", currentChatId);
+      setRecentChats((prev) =>
+        prev.filter((chat) => chat.id !== currentChatId),
+      );
     }
 
     navigate(`/chat/${chatId}`);
     setActiveChat(chatId);
-  }
+  };
 
   const createNewChat = async () => {
     // Validation for existing "New Chat" with messages
-    const currentChatId = location.pathname.split("/chat/")[1];
-    const {data, getError} = await supabase
-      .from('chat_table')
-      .select('messages')
-      .eq('chat_id', currentChatId)
-      .single();
+    try {
+      createChatBtn.current.disabled = true;
+      createChatBtn.current.innerText = "Creating chat...";
+      const currentChatId = location.pathname.split("/chat/")[1];
+      const { data, getError } = await supabase
+        .from("chat_table")
+        .select("messages")
+        .eq("chat_id", currentChatId)
+        .single();
 
-    if(getError){
-      console.error("Error checking current chat messages:", getError);
-      return;
+      if (getError) {
+        console.error("Error checking current chat messages:", getError);
+        throw getError;
+      }
+
+      if (data.messages["messages"].length == 0) {
+        alert(
+          "Please save or clear your current chat before starting a new one.",
+        );
+        throw new Error("Current chat has unsaved messages");
+      }
+
+      const newChatId = `c${Date.now()}`;
+
+      const newChat = {
+        chat_id: newChatId,
+        title: "New Chat",
+        last_active: "Just now",
+        source_count: 0,
+        sources: { sources: [] },
+        title_draft: "New Chat",
+        messages: { messages: [] },
+      };
+
+      const { error } = await supabase.from("chat_table").insert(newChat);
+
+      if (error) {
+        throw error;
+      }
+
+      navigate(`/chat/${newChatId}`);
+      setActiveChat(newChatId);
+      setRecentChats((prev) => [
+        {
+          id: newChatId,
+          title: "New Chat",
+          time: "Just now",
+          sources: 0,
+        },
+        ...prev,
+      ]);
+
+      createChatBtn.current.disabled = false;
+      createChatBtn.current.innerText = "New chat";
+    } catch (err) {
+      console.error("Unexpected error creating new chat:", err);
+      createChatBtn.current.disabled = false;
+      createChatBtn.current.innerText = "New chat";
     }
-
-    if(data.messages['messages'].length == 0){
-      alert("Please save or clear your current chat before starting a new one.");
-      return;
-    }
-
-    const newChatId = `c${Date.now()}`;
-
-    const newChat = {
-      chat_id: newChatId,
-      title: "New Chat",
-      last_active: "Just now",
-      source_count: 0,
-      sources: {sources: []},
-      title_draft: "New Chat",
-      messages: {messages: []}
-    };
-
-    const {error} = await supabase.from('chat_table').insert(newChat);
-
-    if (error) {
-      console.error("Error creating new chat:", error);
-      return;
-    }
-
-    navigate(`/chat/${newChatId}`);
-    setActiveChat(newChatId);
-    setRecentChats(prev => [{
-      id: newChatId,
-      title: "New Chat",
-      time: "Just now",
-      sources: 0
-    }, ...prev]);
   };
 
   useEffect(() => {
@@ -162,6 +179,7 @@ export default function Sidebar({
               border: "1px dashed rgba(255,255,255,0.1)",
             }}
             onClick={createNewChat}
+            ref={createChatBtn}
           >
             <Icon.NewChat />
             <span>New chat</span>
