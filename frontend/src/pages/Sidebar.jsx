@@ -1,13 +1,93 @@
 import Icon from "../utils/AllIcons";
+import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "../utils/Supabase";
+import { useEffect, useState } from "react";
 
 export default function Sidebar({
   sidebarOpen,
-  setActiveChat,
-  activeChat,
-  setChatTitle,
-  setTitleDraft,
-  RECENT_CHATS
+  // activeChat,
+  // changeChat
 }) {
+
+  const [RECENT_CHATS, setRecentChats] = useState([]);
+  const [activeChat, setActiveChat] = useState(null);
+
+  const navigate = useNavigate();
+
+  const getRecentChats = async () => {
+    const { data, error } = await supabase
+      .from('chat_table')
+      .select('chat_id, title, last_active, source_count')
+      .order('last_active', { ascending: false })
+      .limit(10);
+
+    if (error) {
+      console.error("Error fetching recent chats:", error);
+    } else {
+      const formattedChats = data.map(chat => ({
+        id: chat.chat_id,
+        title: chat.title,
+        time: chat.last_active,
+        sources: chat.source_count
+      }));
+      setRecentChats(formattedChats);
+    }
+  }
+
+  const location = useLocation();
+
+  const getActiveChat = () => {
+    const chatId = location.pathname.split("/chat/")[1];
+    console.log("Current chat ID from URL:", chatId);
+    if(chatId){
+      setActiveChat(chatId);
+    }
+  }
+
+  const changeChat = (chatId) => {
+    navigate(`/chat/${chatId}`);
+    setActiveChat(chatId);
+  }
+
+  const createNewChat = async () => {
+    const newChatId = `c${Date.now()}`;
+
+    const newChat = {
+      chat_id: newChatId,
+      title: "New Chat",
+      last_active: "Just now",
+      source_count: 0,
+      sources: {sources: []},
+      title_draft: "New Chat",
+      messages: {messages: []}
+    };
+
+    const {error} = await supabase.from('chat_table').insert(newChat);
+
+    if (error) {
+      console.error("Error creating new chat:", error);
+      return;
+    }
+
+    navigate(`/chat/${newChatId}`);
+    setActiveChat(newChatId);
+    setRecentChats(prev => [{
+      id: newChatId,
+      title: "New Chat",
+      time: "Just now",
+      sources: 0
+    }, ...prev]);
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      getActiveChat();
+      await getRecentChats();
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <aside
       className="flex-shrink-0 flex flex-col border-r transition-all duration-300 overflow-hidden"
@@ -47,6 +127,7 @@ export default function Sidebar({
               color: "#9090a8",
               border: "1px dashed rgba(255,255,255,0.1)",
             }}
+            onClick={createNewChat}
           >
             <Icon.NewChat />
             <span>New chat</span>
@@ -65,9 +146,7 @@ export default function Sidebar({
             <button
               key={chat.id}
               onClick={() => {
-                setActiveChat(chat.id);
-                setChatTitle(chat.title);
-                setTitleDraft(chat.title);
+                changeChat(chat.id);
               }}
               className={`w-full text-left px-2.5 py-2.5 rounded-lg transition-all group ${activeChat === chat.id ? "bg-white/7" : "hover:bg-white/4"}`}
             >
@@ -109,14 +188,14 @@ export default function Sidebar({
                 color: "#f59e0b",
               }}
             >
-              J
+              PB
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-neutral-300 truncate">
-                Jamie Chen
+                Prakhar Boss
               </p>
               <p className="text-[10px]" style={{ color: "#555" }}>
-                Free plan
+                Prooooo plan
               </p>
             </div>
           </div>

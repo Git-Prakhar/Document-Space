@@ -2,6 +2,20 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+
+# ------ Initial setup: Create source_data directory if it doesn't exist ------
+def initial_check():
+    print("Performing initial check...")
+    import os
+    if not os.path.exists("source_data"):
+        print("Creating source_data directory...")
+        os.makedirs("source_data")
+
+initial_check()
+#---------------------------------------------------------------------------
+
+
+# ------ Main FastAPI app setup ------
 app = FastAPI()
 
 app.add_middleware(

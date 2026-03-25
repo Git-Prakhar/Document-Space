@@ -5,24 +5,8 @@ import Spinner from "../components/Spinner.jsx";
 import SourcesDropdown from "../components/SourcesDropdown.jsx";
 import Message from "../components/Message.jsx";
 import { supabase } from "../utils/Supabase.js";
+import { useParams } from "react-router-dom";
 
-const DEMO_MESSAGES = [
-  {
-    id: "m1",
-    role: "user",
-    text: "Can you summarize the key findings from the uploaded research papers?",
-  },
-  {
-    id: "m2",
-    role: "assistant",
-    text: "Based on the three sources you've provided, here are the key findings:\n\n**Climate Impact Study** — The primary document highlights a 2.3°C increase over baseline in coastal regions, with accelerated ice-melt contributing to a projected 40 cm sea-level rise by 2080.\n\n**Economic Analysis PDF** — The second source correlates these environmental shifts with a 12–18% reduction in agricultural output across Southeast Asia, particularly rice and wheat yields.\n\n**News Article** — The web source corroborates these projections and cites recent IPCC revisions that tighten the confidence interval on temperature forecasts.\n\nWould you like me to dive deeper into any of these areas?",
-  },
-  {
-    id: "m3",
-    role: "user",
-    text: "What does the audio recording say about mitigation strategies?",
-  },
-];
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 let idCounter = 10;
@@ -30,33 +14,21 @@ function uid() {
   return `s${++idCounter}`;
 }
 
-export default function ChatPage({setSidebarOpen, chatTitle, setChatTitle, titleDraft, setTitleDraft}) {
+export default function ChatPage({setSidebarOpen}) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
-  const [model, setModel] = useState("claude-sonnet-4");
+  const [model, setModel] = useState("");
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState(DEMO_MESSAGES);
+  const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const titleInputRef = useRef(null);
   const [MODELS, setMODELS] = useState([]);
+  const { chatId } = useParams();
+  const [chatTitle, setChatTitle] = useState("");
+  const [titleDraft, setTitleDraft] = useState("");
 
-  const [sources, setSources] = useState([
-    { id: "s1", type: "pdf", name: "climate_study_2024.pdf", status: "ready" },
-    { id: "s2", type: "pdf", name: "economic_analysis.pdf", status: "ready" },
-    {
-      id: "s3",
-      type: "website",
-      name: "ipcc.ch/report/ar6",
-      status: "loading",
-    },
-    {
-      id: "s4",
-      type: "audio",
-      name: "interview_recording.mp3",
-      status: "error",
-    },
-  ]);
+  const [sources, setSources] = useState([]);
 
   const fetchInitialData = async () => {
     try {
@@ -97,6 +69,29 @@ export default function ChatPage({setSidebarOpen, chatTitle, setChatTitle, title
     }
     waitForBackend();
   }, []);
+
+  const fetchChatData = async (chatId) => {
+    console.log("Fetching data for chat ID:", chatId);
+    const {data, error} = await supabase.from("chat_table").select("*").eq("chat_id", chatId).single();
+    if(error){
+      console.error("Error fetching chat data:", error);
+      return;
+    }
+
+    setMessages(data.messages['messages'] || []);
+    setChatTitle(data.title);
+    setTitleDraft(data.title_draft);
+    setSources(data.sources['sources'] || []);
+  };
+
+
+
+  useEffect(() => {
+    console.log('Chat ID from params:', chatId);
+    if (chatId) {
+      fetchChatData(chatId);
+    }
+  }, [chatId]);
 
   const addSource = async ({ type, name, file }) => {
     const newSrc = { id: uid(), type, name, status: "loading" };
