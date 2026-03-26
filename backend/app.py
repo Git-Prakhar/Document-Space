@@ -1,6 +1,7 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import os
 
 
 # ------ Initial setup: Create source_data directory if it doesn't exist ------
@@ -25,10 +26,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+"""
+const formdata = new FormData();
+    formdata.append("file", file);
+    formdata.append("type", type);
+    formdata.append("chat_id", chatId);
+
+formdata will be recieved from the frontend
+"""
 @app.post("/save-source")
-async def save_source(file: UploadFile = File(...)):
+async def save_source(file: UploadFile = File(...), chat_id: str = Form(...)):
+    print(f"Received file: {file.filename} for chat_id: {chat_id}")
     try:
-        with open(f"source_data/{file.filename}", "wb") as f:
+        if chat_id is None or chat_id.strip() == "":
+            return JSONResponse(content={"message": "chat_id is required"}, status_code=500)
+        
+        if not os.path.exists(f"source_data/{chat_id}"):
+            os.makedirs(f"source_data/{chat_id}")
+
+        with open(f"source_data/{chat_id}/{file.filename}", "wb") as f:
             content = await file.read()
             f.write(content)
         return JSONResponse(content={"message": "File saved successfully"}, status_code=200)

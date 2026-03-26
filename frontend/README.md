@@ -24,5 +24,4 @@ This project is integrated with Supabase for backend services. To set up Supabas
 You can raise an issue if you have any questions or need further assistance with the project. Feel free to contribute to the project by submitting pull requests.
 
 ## To Do for next update:
-- [ ] Fix saving of sources
 - [ ] Show the sources in the chat page with respect to the chat id.

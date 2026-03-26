@@ -17,6 +17,7 @@ function uid() {
 export default function ChatPage({setSidebarOpen}) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
+  const [sourceCount, setSourceCount] = useState(0);
   const [model, setModel] = useState("");
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
@@ -82,6 +83,7 @@ export default function ChatPage({setSidebarOpen}) {
     setChatTitle(data.title);
     setTitleDraft(data.title_draft);
     setSources(data.sources['sources'] || []);
+    setSourceCount(data.source_count);
   };
 
 
@@ -100,6 +102,14 @@ export default function ChatPage({setSidebarOpen}) {
     const formdata = new FormData();
     formdata.append("file", file);
     formdata.append("type", type);
+    formdata.append("chat_id", chatId);
+
+    console.log("Uploading source with data:", {
+      fileName: file.name,
+      type,
+      chat_id: chatId
+    }
+    )
 
     try{
       const res = await fetch("http://localhost:8000/save-source", {
@@ -113,6 +123,20 @@ export default function ChatPage({setSidebarOpen}) {
           s.id === newSrc.id ? { ...s, status: "ready" } : s,
         ),
       );
+
+      const {error} = await supabase.from("chat_table").update({
+        sources: {
+          sources: [...sources, { id: newSrc.id, type, name, status: "ready" }]
+        },
+        source_count: sourceCount + 1
+      }).eq("chat_id", chatId);
+
+      if(error){
+        console.error("Error updating source status in database:", error);
+        throw error;
+      }
+
+      setSourceCount((prev) => prev + 1);
     }
     catch(err){
       console.error(err);
